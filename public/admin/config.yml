@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: mrtgns/ersah-kurumsal
+  repo: "mrtgns/ersah-kurumsal"
   branch: main
   base_url: https://ersah-kurumsal.vercel.app # Buranın sonuna "/" koyma!
   auth_endpoint: api/auth
