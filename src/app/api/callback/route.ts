@@ -20,13 +20,13 @@ export async function GET(req: NextRequest) {
 
   const data = await response.json();
 
-  // Decap CMS'in beklediği HTML yanıtı
+  // KRİTİK DÜZELTME BURADA: Decap CMS'in anlayacağı dilde "token" olarak gönderiyoruz
   const content = `
     <script>
       const receiveMessage = (message) => {
         if (message.data === "authorizing:github") {
           window.opener.postMessage(
-            'authorization:github:success:${JSON.stringify(data)}',
+            'authorization:github:success:{"token":"${data.access_token}","provider":"github"}',
             message.origin
           );
           window.removeEventListener("message", receiveMessage, false);
