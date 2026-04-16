@@ -11,24 +11,19 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 const HeroSlider = () => {
-  const slides = [
+ const slides = [
     {
       id: 1,
-      image: '/img/slider/polar.jpg', // Bu resimleri public/img/slider içine atmalısın
-      link: '/urunler/is-polarlari',
-      title: 'Kaliteli İş Polarları'
+      image: '/img/urunler/mont-1.jpg', // Mevcut olan dosyan
+      link: '/urunler/is-montlari',
+      title: 'Kaliteli İş Montları'
     },
+    // Diğerlerini de şimdilik aynı resme yönlendir ki hata gitsin
     {
       id: 2,
-      image: '/img/slider/mont.jpg',
-      link: '/urunler/is-montlari',
-      title: 'Dayanıklı İş Montları'
-    },
-    {
-      id: 3,
-      image: '/img/slider/yelek.jpg',
-      link: '/urunler/is-yelekleri',
-      title: 'Fonksiyonel Yelekler'
+      image: '/img/urunler/mont-1.jpg',
+      link: '/urunler/is-polarlari',
+      title: 'İş Polarları'
     }
   ];
 

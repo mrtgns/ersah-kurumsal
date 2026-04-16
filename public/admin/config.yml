@@ -1,28 +1,25 @@
 backend:
   name: github
-  repo: senin-github-kullanici-adin/ersah-kurumsal # BURAYI GÜNCELLE
-  branch: main # Kullandığın ana dal
-
-media_folder: "public/img/products" # Resimlerin yükleneceği yer
-public_folder: "/img/products"
+  repo: mrtgns/ersah-kurumsal
+  branch: main
+  base_url: https://ersah-kurumsal.vercel.app # Buranın sonuna "/" koyma!
+  auth_endpoint: api/auth
+  local_backend: true
+media_folder: "public/img/urunler"
+public_folder: "/img/urunler"
 
 collections:
   - name: "urunler"
     label: "Ürünler"
-    folder: "src/content/products" # Her ürün burada bir JSON dosyası olacak
-    create: true # Yeni ürün eklenebilir
+    folder: "src/content/products"
+    create: true
     slug: "{{slug}}"
     extension: "json"
     format: "json"
     fields:
       - { label: "Ürün Adı", name: "title", widget: "string" }
-      - { label: "URL Uzantısı (Slug)", name: "slug", widget: "string" }
-      - { 
-          label: "Kategori", 
-          name: "category", 
-          widget: "select", 
-          options: ["is-montlari", "is-polarlari", "is-pantolonlari", "tshirt-sweat"] 
-        }
+      - { label: "Slug", name: "slug", widget: "string" }
+      - { label: "Kategori", name: "category", widget: "select", options: ["is-montlari", "is-polarlari"] }
       - { label: "Ürün Görseli", name: "image", widget: "image" }
-      - { label: "Ürün Açıklaması", name: "description", widget: "text" }
-      - { label: "Yayın Tarihi", name: "date", widget: "datetime" }
+      - { label: "Açıklama", name: "description", widget: "text" }
+      - { label: "Tarih", name: "date", widget: "datetime" }
