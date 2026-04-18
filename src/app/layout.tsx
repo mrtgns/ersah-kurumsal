@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import ClientWrapper from "@/components/ClientWrapper"; // Yeni kontrolcümüzü çağırdık
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,14 +18,10 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={inter.className}>
-        <Navbar />
-        <main className="min-h-screen">
+        {/* Tüm sayfaları kontrolcümüzün içine sardık */}
+        <ClientWrapper>
           {children}
-        </main>
-        {/* Footer Buraya Gelecek */}
-        <footer className="bg-primary text-white py-10 text-center">
-          <p>© 2026 Ersah Kurumsal. Tüm Hakları Saklıdır.</p>
-        </footer>
+        </ClientWrapper>
       </body>
     </html>
   );

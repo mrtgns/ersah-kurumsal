@@ -1,44 +1,62 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 
-interface ProductCardProps {
-  product: {
-    title: string;
-    slug: string;
-    image: string;
-    category: string;
-  };
+// 1. Yeni Sanity veri yapımıza göre tipleri güncelledik
+interface Product {
+  _id?: string;
+  title: string;
+  productCode: string;
+  slug: string;
+  category: string;
+  imageUrl: string; // Eski 'image' yerine artık 'imageUrl' kullanıyoruz
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
-      <Link href={`/urunler/${product.slug}`}>
-        <div className="relative aspect-square overflow-hidden bg-gray-50">
+    <div className="border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-white overflow-hidden flex flex-col">
+      {/* Resim Kısmı */}
+      <Link href={`/urunler/${product.slug}`} className="relative h-64 w-full bg-gray-100 flex-shrink-0 block">
+        {product.imageUrl ? (
           <Image
-            src={product.image}
+            src={product.imageUrl}
             alt={product.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-        </div>
-        <div className="p-4">
-          <span className="text-xs font-semibold text-secondary uppercase tracking-wider">
-            {product.category.replace('-', ' ')}
-          </span>
-          <h3 className="mt-1 text-lg font-bold text-gray-900 line-clamp-2">
-            {product.title}
-          </h3>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-primary font-medium text-sm">Detayları Gör</span>
-            <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+            Resim Yok
           </div>
-        </div>
+        )}
       </Link>
+
+      {/* İçerik Kısmı */}
+      <div className="p-4 flex flex-col flex-grow">
+        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-semibold">
+          {product.category}
+        </div>
+        <h2 className="text-lg font-bold text-gray-800 mb-1">
+          <Link href={`/urunler/${product.slug}`} className="hover:text-blue-600">
+            {product.title}
+          </Link>
+        </h2>
+        <div className="text-sm text-gray-600 bg-gray-100 inline-block px-2 py-1 rounded-md mb-4 self-start">
+          Kod: {product.productCode}
+        </div>
+        
+        {/* Butonu en alta itmek için mt-auto kullanıyoruz */}
+        <Link 
+          href={`/urunler/${product.slug}`} 
+          className="mt-auto block w-full text-center bg-gray-900 text-white py-2 rounded hover:bg-gray-800 transition-colors"
+        >
+          Detayları İncele
+        </Link>
+      </div>
     </div>
   );
-};
-
-export default ProductCard;
+}
