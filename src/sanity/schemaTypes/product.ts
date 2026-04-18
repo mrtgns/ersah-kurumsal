@@ -24,7 +24,6 @@ const product = defineType({
       title: 'URL Uzantısı',
       type: 'slug',
       options: {
-        // Otomatik URL oluşturucu (Ürün Adı + Ürün Kodu)
         source: (doc) => {
           const title = doc?.title || '';
           const code = doc?.productCode || '';
@@ -51,26 +50,55 @@ const product = defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
+
+    // --- KRİTİK ALAN 1: MODEL GRUBU ---
     defineField({
-      name: 'colors',
-      title: 'Mevcut Renkler',
+      name: 'modelName',
+      title: 'Model Grubu / Adı',
       type: 'string',
-      description: 'Katalogdaki renk seçenekleri (Örn: Lacivert, Siyah, Turuncu)',
+      description: 'Aynı modelin farklı renklerini birbirine bağlar. Örn: "Erşah-Klasik-Polar"',
     }),
+
+    // --- KRİTİK ALAN 2: BU ÜRÜNÜN RENGİ ---
+    defineField({
+      name: 'mainColor',
+      title: 'Bu Ürünün Rengi',
+      type: 'string',
+      description: 'Örn: Siyah, Kırmızı, Mavi. (Renk seçim butonunda bu isim yazacak)',
+    }),
+    
+    defineField({
+      name: 'sizes',
+      title: 'Beden Seçenekleri',
+      type: 'string',
+      description: 'Örn: S, M, L, XL, XXL (Aralarına virgül koyun)',
+    }),
+
     defineField({
       name: 'image',
       title: 'Ürün Ana Görseli',
       type: 'image',
-      options: {
-        hotspot: true,
-      },
+      options: { hotspot: true },
+      description: 'Vitrinde görünecek olan kapak resmi.',
       validation: (Rule) => Rule.required(),
     }),
+
+    defineField({
+      name: 'images',
+      title: 'Ürün Detay Galerisi',
+      type: 'array',
+      description: 'Ürünün arkadan, yandan veya kumaş detaylarını gösteren ek resimler.',
+      of: [{ 
+        type: 'image',
+        options: { hotspot: true }
+      }]
+    }),
+
     defineField({
       name: 'description',
       title: 'Ürün Açıklaması / Kumaş Detayları',
       type: 'text',
-      description: 'Ürünün özellikleri, gramajı veya kumaş türü hakkında bilgi.',
+      description: 'Ürünün özellikleri hakkında teknik bilgi.',
     }),
   ],
 })
