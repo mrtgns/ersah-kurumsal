@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import SearchOverlay from './SearchOverlay'; // Yeni bileşeni çağır
+import SearchOverlay from './SearchOverlay'; 
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -42,7 +42,8 @@ const Navbar = () => {
             {/* Profesyonel Arama Butonu */}
             <button 
               onClick={() => setIsSearchOpen(true)}
-              className="p-3 text-gray-700 hover:bg-gray-50 rounded-full transition-all"
+              className="p-3 text-gray-700 hover:bg-gray-50 rounded-full transition-all outline-none"
+              aria-label="Arama Yap"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -58,12 +59,50 @@ const Navbar = () => {
             </Link>
 
             {/* Mobil Menü Burger */}
-            <button className="xl:hidden p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
+            <button 
+              className="xl:hidden p-2 text-gray-900 outline-none" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Menüyü Aç/Kapat"
+            >
+              {/* Menü açıksa X ikonu, kapalıysa 3 çizgi ikonu */}
+              {isMobileMenuOpen ? (
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+              )}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* MOBİL MENÜ İÇERİĞİ (Eksik olan kısım burasıydı) */}
+      <div className={`xl:hidden bg-white border-t border-gray-50 overflow-hidden transition-all duration-300 ease-in-out ${
+        isMobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="px-4 py-6 flex flex-col space-y-4">
+          {menuItems.map((item) => (
+            <Link
+              key={item.title}
+              href={item.href}
+              onClick={() => setIsMobileMenuOpen(false)} // Linke tıklayınca menü kapansın
+              className="block text-lg font-bold text-gray-700 uppercase tracking-tight hover:text-secondary transition-colors"
+            >
+              {item.title}
+            </Link>
+          ))}
+          
+          {/* Mobilde ekran küçük olduğu için gizlenen "Teklif Al" butonunu menü içine ekledik */}
+          <Link 
+            href="https://wa.me/905521334252"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="mt-4 md:hidden block w-full bg-secondary text-white text-center py-4 rounded-xl font-bold shadow-lg"
+          >
+            TEKLİF AL
+          </Link>
         </div>
       </div>
 
