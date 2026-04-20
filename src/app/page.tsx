@@ -3,8 +3,9 @@ import Image from 'next/image';
 import { client } from '@/sanity/lib/client';
 import { groq } from 'next-sanity';
 
-export const revalidate = 60; // 60 saniyede bir yeni ürünleri kontrol eder
+export const revalidate = 60; // 60 saniyede bir yeni verileri kontrol eder
 
+// --- TİP TANIMLAMALARI ---
 interface Product {
   _id: string;
   title: string;
@@ -14,9 +15,16 @@ interface Product {
   imageUrl: string;
 }
 
+interface Catalog {
+  _id: string;
+  title: string;
+  coverImageUrl: string;
+  fileUrl: string;
+}
+
 export default async function Home() {
-  // 1. DİNAMİK SORGULAMA: En son eklenen 100 ürünü kategorisiyle birlikte çekiyoruz
-  const query = groq`*[_type == "product"] | order(_createdAt desc)[0...100] {
+  // 1. SORGULAR: Hem ürünleri hem katalogları çekmek için hazırlıyoruz
+  const productsQuery = groq`*[_type == "product"] | order(_createdAt desc)[0...100] {
     _id,
     title,
     productCode,
@@ -25,26 +33,34 @@ export default async function Home() {
     "imageUrl": image.asset->url
   }`;
 
-  const allProducts: Product[] = await client.fetch(query);
+  const catalogsQuery = groq`*[_type == "catalog"] | order(_createdAt desc) {
+    _id,
+    title,
+    "coverImageUrl": coverImage.asset->url,
+    "fileUrl": file.asset->url
+  }`;
 
-  // 2. OTOMATİK GRUPLAMA MANTIĞI (Vitrin Raflarını Hazırlıyoruz)
+  // 2. VERİ ÇEKİMİ: İkisini aynı anda çekerek hızı artırıyoruz (Promise.all)
+  const [allProducts, catalogs]: [Product[], Catalog[]] = await Promise.all([
+    client.fetch(productsQuery),
+    client.fetch(catalogsQuery)
+  ]);
+
+  // 3. ÜRÜN GRUPLAMA MANTIĞI (Vitrin Rafları)
   const groupedProducts: Record<string, Product[]> = {};
 
   allProducts.forEach(product => {
-    if (!product.category) return; // Kategorisi olmayanları atla
+    if (!product.category) return; 
     
     if (!groupedProducts[product.category]) {
-      groupedProducts[product.category] = []; // Kategori rafı yoksa oluştur
+      groupedProducts[product.category] = [];
     }
     
-    // Her kategori rafına sadece en yeni 4 ürünü koy (Vitrin mantığı)
     if (groupedProducts[product.category].length < 4) {
       groupedProducts[product.category].push(product);
     }
   });
 
-  // 3. BAŞLIK GÜZELLEŞTİRİCİ
-  // URL'deki (t-shirt) yazısını anasayfada şık bir başlığa (T-Shirt Modelleri) çeviririz.
   const getCategoryTitle = (cat: string) => {
     const titles: Record<string, string> = {
       't-shirt': 'T-Shirt Modelleri',
@@ -55,11 +71,9 @@ export default async function Home() {
       'pantolon': 'Gabardin Pantolonlar',
       'yelek-pantolon': 'Yelek & Pantolon Takımları',
     };
-    // Eğer listeye yeni bir şey eklersen (örn: sapka), otomatik olarak "ŞAPKA MODELLERİ" yazar
     return titles[cat] || `${cat.replace('-', ' ').toUpperCase()} MODELLERİ`;
   };
 
-  // Ekrana basılacak bölümleri (Kategorileri) bir diziye alıyoruz
   const sections = Object.keys(groupedProducts).map(cat => ({
     title: getCategoryTitle(cat),
     categorySlug: cat,
@@ -100,12 +114,84 @@ export default async function Home() {
         </div>
       </section>
 
+     
+     {/* KATALOGLAR BÖLÜMÜ */}
+{catalogs && catalogs.length > 0 && (
+  <section className="bg-gray-50 py-24 border-y border-gray-100">
+    <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+      
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <h2 className="text-4xl font-black text-gray-900 tracking-tight uppercase">Dijital Kataloglarımız</h2>
+        <p className="mt-4 text-gray-500 text-lg">İncelemek istediğiniz kataloğun üzerine tıklayarak anında görüntüleyebilirsiniz.</p>
+        <div className="h-1.5 w-20 bg-secondary mx-auto mt-6 rounded-full"></div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {catalogs.map((cat) => (
+          <div key={cat._id} className="group relative flex flex-col">
+            
+            {/* TÜM KARTI PDF'E BAĞLIYORUZ (Tıklayınca Açılsın Diye) */}
+            <a 
+              href={cat.fileUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-white shadow-lg group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500 border border-gray-100 block"
+            >
+              {cat.coverImageUrl ? (
+                <Image 
+                  src={cat.coverImageUrl} 
+                  alt={cat.title} 
+                  fill 
+                  className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center p-8">
+                  <span className="text-white/20 font-black text-6xl -rotate-12 absolute">ERSAH</span>
+                  <h3 className="text-white text-2xl font-bold text-center relative z-10">{cat.title}</h3>
+                </div>
+              )}
+
+              {/* Hover Efekti: Üzerine gelince "Tıkla İncele" yazısı çıksın */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div className="bg-white text-gray-900 font-bold px-8 py-3 rounded-full shadow-2xl flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Kataloğu Aç
+                </div>
+              </div>
+            </a>
+
+            {/* BAŞLIK VE İNDİR BUTONU (Resmin altında ayrı durur) */}
+            <div className="mt-6">
+              <h3 className="text-gray-900 text-xl font-bold text-center mb-4 truncate">
+                {cat.title}
+              </h3>
+              
+              {/* Sadece İndirmek İsteyenler İçin Küçük Buton */}
+              <a 
+                href={`${cat.fileUrl}?dl=`} 
+                className="flex items-center justify-center gap-2 w-full text-gray-500 hover:text-secondary font-bold text-sm transition-colors border-t border-gray-100 pt-4"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                PDF Olarak İndir
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
       {/* 2. DİNAMİK VİTRİN BÖLÜMLERİ (Sistemdeki tüm kategoriler otomatik gelir) */}
       <div className="max-w-350 mx-auto px-4 lg:px-8 py-20 space-y-32">
         {sections.map((section, index) => (
           <section key={index}>
             
-            {/* Kategori Başlığı ve "Tümünü Gör" Linki */}
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4 border-b border-gray-100 pb-6">
               <div>
                 <h2 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">
@@ -122,7 +208,6 @@ export default async function Home() {
               </Link>
             </div>
 
-            {/* 4'lü Ürün Grid Yapısı */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {section.products.map((product) => (
                 <Link 
@@ -130,7 +215,6 @@ export default async function Home() {
                   href={`/urunler/${product.slug}`}
                   className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-300 flex flex-col"
                 >
-                  {/* Ürün Görseli */}
                   <div className="relative aspect-square bg-gray-50 p-6 overflow-hidden">
                     {product.imageUrl ? (
                       <Image 
@@ -144,7 +228,6 @@ export default async function Home() {
                       <div className="absolute inset-0 flex items-center justify-center text-gray-300">Görsel Yok</div>
                     )}
                     
-                    {/* Üzerine gelince çıkan İncele butonu */}
                     <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                       <div className="bg-gray-900 text-white text-center py-3 rounded-xl font-bold text-sm">
                         Ürünü İncele
@@ -152,7 +235,6 @@ export default async function Home() {
                     </div>
                   </div>
 
-                  {/* Ürün Bilgileri */}
                   <div className="p-6 flex flex-col grow">
                     <h3 className="text-lg font-bold text-gray-900 line-clamp-2 uppercase tracking-tight group-hover:text-primary transition-colors">
                       {product.title}
